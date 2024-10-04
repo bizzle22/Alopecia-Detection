@@ -43,7 +43,6 @@ download_model(svm_cnn_url, svm_cnn_path)
 download_model(vgg19_url, vgg19_path)
 
 # Function to perform prediction
-# Function to perform prediction
 def predict(img_path):
     # Load and preprocess the image
     img = image.load_img(img_path, target_size=(224, 224))
@@ -51,20 +50,28 @@ def predict(img_path):
     img_array /= 255.
     img_array = np.expand_dims(img_array, axis=0)
 
-    # Load models
-    resnet50_model = load_model(resnet50_path)
-    svm_cnn_model = load_model(svm_cnn_path)
-    vgg19_model = load_model(vgg19_path)
+    # Perform predictions one model at a time to avoid memory issues
 
-    # Make predictions
+    # Load and predict with resnet50 model
+    print("Loading and predicting with ResNet50 model...")
+    resnet50_model = load_model(resnet50_path, compile=False)
     resnet50_prediction = resnet50_model.predict(img_array)
-    svm_cnn_prediction = svm_cnn_model.predict(img_array)
-    vgg19_prediction = vgg19_model.predict(img_array)
-
-    # Interpret predictions (assuming binary classification with threshold 0.5)
     resnet50_result = 'Alopecia' if resnet50_prediction < 0.5 else 'Healthy Hair'
+    del resnet50_model  # Free memory
+
+    # Load and predict with svm_cnn model
+    print("Loading and predicting with SVM CNN model...")
+    svm_cnn_model = load_model(svm_cnn_path, compile=False)
+    svm_cnn_prediction = svm_cnn_model.predict(img_array)
     svm_cnn_result = 'Alopecia' if svm_cnn_prediction < 0.5 else 'Healthy Hair'
+    del svm_cnn_model  # Free memory
+
+    # Load and predict with vgg19 model
+    print("Loading and predicting with VGG19 model...")
+    vgg19_model = load_model(vgg19_path, compile=False)
+    vgg19_prediction = vgg19_model.predict(img_array)
     vgg19_result = 'Alopecia' if vgg19_prediction < 0.5 else 'Healthy Hair'
+    del vgg19_model  # Free memory
 
     # Ensembling (majority vote)
     ensemble_prediction = [resnet50_result, svm_cnn_result, vgg19_result]
